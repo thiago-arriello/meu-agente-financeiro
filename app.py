@@ -2,16 +2,15 @@ import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
-import google.generativeai as genai
-import json # Biblioteca nova para ler o cofre
+from google import genai # <--- BIBLIOTECA NOVA
+import json
 
 st.title("Meu Agente Financeiro 🤖")
 
 try:
     # 1. Puxando as chaves do "Cofre" do Streamlit de forma segura
     CHAVE_GEMINI = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=CHAVE_GEMINI)
-    modelo_ia = genai.GenerativeModel('gemini-3.6-flash')
+    client_ia = genai.Client(api_key=CHAVE_GEMINI) # <--- CONEXÃO NOVA
 
     # 2. Lendo o JSON do Google também pelo Cofre
     escopos = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -58,7 +57,11 @@ try:
         {pergunta}
         """
 
-        resposta = modelo_ia.generate_content(instrucao_sistema)
+        # <--- FORMATO NOVO DE GERAÇÃO DE RESPOSTA
+        resposta = client_ia.models.generate_content(
+            model='gemini-3.6-flash',
+            contents=instrucao_sistema
+        )
         
         with st.chat_message("assistant"):
             st.markdown(resposta.text)
